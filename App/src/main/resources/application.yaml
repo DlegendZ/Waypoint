@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: waypoint
+
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  #secret-key 32 bytes
+  jwt:
+    secret: ${JWT_SECRET_KEY}
+    expiration-ms: ${JWT_EXPIRATION_TIME}
+
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT}
+    com.raynald: INFO
+
