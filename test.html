@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+    <h2>WebSocket Test</h2>
+    <button onclick="connect()">Connect</button>
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="disconnect()">Disconnect</button>
+    <div id="log" style="font-family:monospace; white-space:pre-line; margin-top:20px;"></div>
+
+    <script>
+        const socket = new SockJS('http://localhost:8080/ws');
+        const stompClient = StompJs.Stomp.over(socket);
+        
+        function log(msg) {
+            document.getElementById('log').textContent += msg + '\n';
+        }
+
+        function connect() {
+            stompClient.connect({}, function(frame) {
+                log(frame);
+                stompClient.subscribe('/topic/order/test', function(message) {
+                    log(message.body);
+                })
+            })
+        }
+
+        function sendMessage() {
+            stompClient.send('/app/location/test', {}, JSON.stringify({msg: 'hello, world!'}));
+            log("Sent");
+        }
+
+        function disconnect() {
+            stompClient.disconnect(function(frame) {
+                log(frame);
+            });
+        }
+    </script>
+</body>
+</html>
