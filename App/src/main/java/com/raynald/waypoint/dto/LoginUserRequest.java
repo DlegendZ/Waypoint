@@ -5,10 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class CreateUserRequest {
-    private long id;
-    private String name;
+public class LoginUserRequest {
     private String email;
     private String password;
-    private String role;
 }

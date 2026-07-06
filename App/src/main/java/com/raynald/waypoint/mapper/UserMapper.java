@@ -1,7 +1,7 @@
-package com.raynald.waypoint.Mapper;
+package com.raynald.waypoint.mapper;
 
 import com.raynald.waypoint.dto.CreateUserRequest;
-import com.raynald.waypoint.dto.CreateUserResponse;
+import com.raynald.waypoint.dto.UserResponse;
 import com.raynald.waypoint.entity.UserEntity;
 import org.springframework.stereotype.Component;
 
@@ -18,8 +18,8 @@ public class UserMapper {
 
     }
 
-    public CreateUserResponse toResponse(UserEntity user) {
-        return CreateUserResponse.builder()
+    public UserResponse toResponse(UserEntity user) {
+        return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())

@@ -26,9 +26,9 @@ spring:
       port: 6379
 
   #secret-key 32 bytes
-  jwt:
-    secret: ${JWT_SECRET_KEY}
-    expiration-ms: ${JWT_EXPIRATION_TIME}
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration-ms: ${JWT_EXPIRATION_TIME}
 
 logging:
   level:

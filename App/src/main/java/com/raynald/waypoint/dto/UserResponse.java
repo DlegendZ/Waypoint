@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class CreateUserResponse {
+public class UserResponse {
     private long id;
     private String name;
     private String email;
