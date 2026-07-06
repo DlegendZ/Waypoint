@@ -1,0 +1,38 @@
+package com.raynald.waypoint.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "users")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class UserEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false, length = 60)
+    private String password_hash;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    public enum Role {
+        CUSTOMER,
+        DRIVER,
+        DISPATCHER
+    }
+}
