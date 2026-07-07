@@ -31,6 +31,10 @@ public class JwtUtil {
                 .compact();
     }
 
+    public long getExpirationMs() {
+        return expiration_time;
+    }
+
     public Claims extractClaims(String token) {
         SecretKey key = Keys.hmacShaKeyFor(secret_key.getBytes(StandardCharsets.UTF_8));
 

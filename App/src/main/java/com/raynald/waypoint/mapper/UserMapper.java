@@ -8,14 +8,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
 
-    public UserEntity toEntity(CreateUserRequest request) {
+    public UserEntity toEntity(CreateUserRequest request, String passwordHash) {
         return UserEntity.builder()
                 .name(request.getName())
                 .email(request.getEmail())
-                .password_hash(request.getPassword())
-                .role(UserEntity.Role.valueOf(request.getRole()))
+                .passwordHash(passwordHash)
+                .role(UserEntity.Role.valueOf(request.getRole().toUpperCase()))
                 .build();
-
     }
 
     public UserResponse toResponse(UserEntity user) {

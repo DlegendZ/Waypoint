@@ -16,7 +16,7 @@ public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -25,7 +25,7 @@ public class UserEntity {
     private String email;
 
     @Column(nullable = false, length = 60)
-    private String password_hash;
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     private Role role;

@@ -30,17 +30,18 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> loginUser(@RequestBody LoginUserRequest request, HttpServletResponse Response) {
+    public ResponseEntity<UserResponse> loginUser(@RequestBody LoginUserRequest request, HttpServletResponse servletResponse) {
         UserResponse response = authService.loginUser(request);
 
         ResponseCookie cookie = ResponseCookie.from("token", jwtUtil.generateToken(response.getEmail(), response.getRole()))
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
-                .maxAge(Duration.ofHours(2))
+                .maxAge(Duration.ofMillis(jwtUtil.getExpirationMs()))
+                .sameSite("Lax")
                 .build();
 
-        Response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok(response);
     }
 }

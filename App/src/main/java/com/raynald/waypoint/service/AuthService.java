@@ -5,6 +5,8 @@ import com.raynald.waypoint.dto.CreateUserRequest;
 import com.raynald.waypoint.dto.UserResponse;
 import com.raynald.waypoint.dto.LoginUserRequest;
 import com.raynald.waypoint.entity.UserEntity;
+import com.raynald.waypoint.exception.EmailAlreadyExistsException;
+import com.raynald.waypoint.exception.InvalidCredentialsException;
 import com.raynald.waypoint.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,13 +22,17 @@ public class AuthService {
 
     public UserResponse registerUser(CreateUserRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered.");
+            throw new EmailAlreadyExistsException("Email already registered.");
         }
 
-        String password_hash = passwordEncoder.encode(request.getPassword());
-        request.setPassword(password_hash);
+        String requestedRole = request.getRole();
+        if (requestedRole != null && requestedRole.equalsIgnoreCase("DISPATCHER")) {
+            throw new IllegalArgumentException("Dispatcher accounts cannot be self-registered.");
+        }
 
-        UserEntity user = userMapper.toEntity(request);
+        String passwordHash = passwordEncoder.encode(request.getPassword());
+
+        UserEntity user = userMapper.toEntity(request, passwordHash);
         UserEntity saved_user = userRepository.save(user);
 
         return userMapper.toResponse(saved_user);
@@ -34,10 +40,10 @@ public class AuthService {
 
     public UserResponse loginUser(LoginUserRequest request) {
         UserEntity user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Email not found"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword_hash())) {
-            throw new RuntimeException("Wrong Password");
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         return userMapper.toResponse(user);
