@@ -29,23 +29,24 @@ public class OrderEntity {
     @JoinColumn(name = "driver_id", updatable = false)
     private UserEntity driverId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "pick_up_lat")
     private Float pickUpLat;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "pick_up_lng")
     private Float pickUpLng;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "drop_off_lat")
     private Float dropOffLat;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "drop_off_lng")
     private Float dropOffLng;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "current_stage")
     private Stage currentStage;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, name = "created_at")
     private LocalDateTime createdAt;
 
     public enum Stage {

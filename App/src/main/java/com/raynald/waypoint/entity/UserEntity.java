@@ -24,10 +24,11 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 60)
+    @Column(nullable = false, length = 60, name = "password_hash")
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
 
     public enum Role {
