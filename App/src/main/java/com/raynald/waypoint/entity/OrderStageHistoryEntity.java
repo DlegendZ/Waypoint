@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class OrderStageHistory {
+public class OrderStageHistoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +23,7 @@ public class OrderStageHistory {
 
     @ManyToOne
     @JoinColumn(name = "order_id", updatable = false)
-    private OrderEntity OrderId;
+    private OrderEntity orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "from_stage")
