@@ -1,5 +1,6 @@
 package com.raynald.waypoint.entity;
 
+import com.raynald.waypoint.enums.Stage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,13 +49,4 @@ public class OrderEntity {
     @CreationTimestamp
     @Column(nullable = false, updatable = false, name = "created_at")
     private LocalDateTime createdAt;
-
-    public enum Stage {
-        CREATED,
-        ASSIGNED,
-        PICKED_UP,
-        ON_THE_WAY,
-        DELIVERED,
-        CANCELLED
-    }
 }

@@ -4,6 +4,7 @@ import com.raynald.waypoint.dto.OrderResponse;
 import com.raynald.waypoint.entity.OrderEntity;
 import com.raynald.waypoint.entity.OrderStageHistoryEntity;
 import com.raynald.waypoint.entity.UserEntity;
+import com.raynald.waypoint.enums.Stage;
 import com.raynald.waypoint.exception.ForbiddenActionException;
 import com.raynald.waypoint.exception.InvalidStageTransitionException;
 import com.raynald.waypoint.exception.OrderNotFoundException;
@@ -29,19 +30,19 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderStageHistoryRepository orderStageHistoryRepository;
 
-    private static final Map<OrderEntity.Stage, Set<OrderEntity.Stage>> ALLOWED_TRANSITIONS =
-            new EnumMap<>(OrderEntity.Stage.class);
+    private static final Map<Stage, Set<Stage>> ALLOWED_TRANSITIONS =
+            new EnumMap<>(Stage.class);
 
     static {
-        ALLOWED_TRANSITIONS.put(OrderEntity.Stage.CREATED, EnumSet.of(OrderEntity.Stage.ASSIGNED, OrderEntity.Stage.CANCELLED));
-        ALLOWED_TRANSITIONS.put(OrderEntity.Stage.ASSIGNED, EnumSet.of(OrderEntity.Stage.PICKED_UP, OrderEntity.Stage.CANCELLED));
-        ALLOWED_TRANSITIONS.put(OrderEntity.Stage.PICKED_UP, EnumSet.of(OrderEntity.Stage.ON_THE_WAY));
-        ALLOWED_TRANSITIONS.put(OrderEntity.Stage.ON_THE_WAY, EnumSet.of(OrderEntity.Stage.DELIVERED));
-        ALLOWED_TRANSITIONS.put(OrderEntity.Stage.DELIVERED, EnumSet.noneOf(OrderEntity.Stage.class));
-        ALLOWED_TRANSITIONS.put(OrderEntity.Stage.CANCELLED, EnumSet.noneOf(OrderEntity.Stage.class));
+        ALLOWED_TRANSITIONS.put(Stage.CREATED, EnumSet.of(Stage.ASSIGNED, Stage.CANCELLED));
+        ALLOWED_TRANSITIONS.put(Stage.ASSIGNED, EnumSet.of(Stage.PICKED_UP, Stage.CANCELLED));
+        ALLOWED_TRANSITIONS.put(Stage.PICKED_UP, EnumSet.of(Stage.ON_THE_WAY));
+        ALLOWED_TRANSITIONS.put(Stage.ON_THE_WAY, EnumSet.of(Stage.DELIVERED));
+        ALLOWED_TRANSITIONS.put(Stage.DELIVERED, EnumSet.noneOf(Stage.class));
+        ALLOWED_TRANSITIONS.put(Stage.CANCELLED, EnumSet.noneOf(Stage.class));
     }
 
-    private boolean isValidTransition(OrderEntity.Stage from, OrderEntity.Stage to) {
+    private boolean isValidTransition(Stage from, Stage to) {
         return ALLOWED_TRANSITIONS.getOrDefault(from, Set.of()).contains(to);
     }
 
@@ -56,10 +57,10 @@ public class OrderService {
             throw new ForbiddenActionException("You are not the driver assigned to this order.");
         }
 
-        OrderEntity.Stage currentStage = order.getCurrentStage();
-        OrderEntity.Stage requestedStage;
+        Stage currentStage = order.getCurrentStage();
+        Stage requestedStage;
         try {
-            requestedStage = OrderEntity.Stage.valueOf(updatedStageRaw.toUpperCase());
+            requestedStage = Stage.valueOf(updatedStageRaw.toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new InvalidStageTransitionException("Unknown stage: " + updatedStageRaw);
         }

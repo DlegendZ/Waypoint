@@ -3,6 +3,7 @@ package com.raynald.waypoint.mapper;
 import com.raynald.waypoint.dto.CreateUserRequest;
 import com.raynald.waypoint.dto.UserResponse;
 import com.raynald.waypoint.entity.UserEntity;
+import com.raynald.waypoint.enums.Role;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,7 +14,7 @@ public class UserMapper {
                 .name(request.getName())
                 .email(request.getEmail())
                 .passwordHash(passwordHash)
-                .role(UserEntity.Role.valueOf(request.getRole().toUpperCase()))
+                .role(Role.valueOf(request.getRole().toUpperCase()))
                 .build();
     }
 

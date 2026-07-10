@@ -1,5 +1,6 @@
 package com.raynald.waypoint.entity;
 
+import com.raynald.waypoint.enums.Stage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,13 +41,4 @@ public class OrderStageHistoryEntity {
     @ManyToOne
     @JoinColumn(name = "actor_id", updatable = false)
     private UserEntity actorId;
-
-    public enum Stage {
-        CREATED,
-        ASSIGNED,
-        PICKED_UP,
-        ON_THE_WAY,
-        DELIVERED,
-        CANCELLED
-    }
 }

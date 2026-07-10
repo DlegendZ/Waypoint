@@ -1,5 +1,6 @@
 package com.raynald.waypoint.entity;
 
+import com.raynald.waypoint.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,10 +31,4 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-
-    public enum Role {
-        CUSTOMER,
-        DRIVER,
-        DISPATCHER
-    }
 }

@@ -5,6 +5,7 @@ import com.raynald.waypoint.dto.OrderResponse;
 import com.raynald.waypoint.entity.OrderEntity;
 import com.raynald.waypoint.entity.OrderStageHistoryEntity;
 import com.raynald.waypoint.entity.UserEntity;
+import com.raynald.waypoint.enums.Stage;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,15 +19,15 @@ public class OrderMapper {
                 .pickUpLng(request.getPickUpLng())
                 .dropOffLat(request.getDropOffLat())
                 .dropOffLng(request.getDropOffLng())
-                .currentStage(OrderEntity.Stage.valueOf(request.getCurrentStage().toUpperCase()))
+                .currentStage(Stage.valueOf(request.getCurrentStage().toUpperCase()))
                 .build();
     }
 
-    public OrderStageHistoryEntity toEntity(OrderEntity.Stage toStage, OrderEntity order, UserEntity actor) {
+    public OrderStageHistoryEntity toEntity(Stage toStage, OrderEntity order, UserEntity actor) {
         return OrderStageHistoryEntity.builder()
                 .orderId(order)
-                .fromStage(OrderStageHistoryEntity.Stage.valueOf(order.getCurrentStage().name()))
-                .toStage(OrderStageHistoryEntity.Stage.valueOf(toStage.name()))
+                .fromStage(Stage.valueOf(order.getCurrentStage().name()))
+                .toStage(Stage.valueOf(toStage.name()))
                 .actorId(actor)
                 .build();
     }
