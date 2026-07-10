@@ -38,8 +38,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception exception) {
-                // Invalid/expired token: leave unauthenticated rather than failing the request here;
-                // SecurityConfig's authorizeHttpRequests rules decide whether that's allowed (401/403).
                 SecurityContextHolder.clearContext();
             }
         }

@@ -45,4 +45,22 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
+        ErrorResponse error = new ErrorResponse(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(InvalidStageTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStageTransition(InvalidStageTransitionException exception) {
+        ErrorResponse error = new ErrorResponse(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(ForbiddenActionException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenAction(ForbiddenActionException exception) {
+        ErrorResponse error = new ErrorResponse(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
 }

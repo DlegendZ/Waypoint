@@ -2,7 +2,6 @@ package com.raynald.waypoint.mapper;
 
 import com.raynald.waypoint.dto.CreateOrderRequest;
 import com.raynald.waypoint.dto.OrderResponse;
-import com.raynald.waypoint.dto.UpdateOrderStatusRequest;
 import com.raynald.waypoint.entity.OrderEntity;
 import com.raynald.waypoint.entity.OrderStageHistoryEntity;
 import com.raynald.waypoint.entity.UserEntity;
@@ -23,12 +22,12 @@ public class OrderMapper {
                 .build();
     }
 
-    public OrderStageHistoryEntity toEntity(UpdateOrderStatusRequest request, OrderEntity order, UserEntity actorId) {
+    public OrderStageHistoryEntity toEntity(OrderEntity.Stage toStage, OrderEntity order, UserEntity actor) {
         return OrderStageHistoryEntity.builder()
                 .orderId(order)
                 .fromStage(OrderStageHistoryEntity.Stage.valueOf(order.getCurrentStage().name()))
-                .toStage(OrderStageHistoryEntity.Stage.valueOf(request.getUpdatedStage()))
-                .actorId(actorId)
+                .toStage(OrderStageHistoryEntity.Stage.valueOf(toStage.name()))
+                .actorId(actor)
                 .build();
     }
 
