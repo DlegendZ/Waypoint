@@ -28,7 +28,11 @@ public class DriverProfileService {
         DriverProfileEntity driver = driverProfileRepository.findByUserId(user)
                 .orElseThrow(() -> new ForbiddenActionException("You are not a driver"));
 
-        driver.setStatus(Status.valueOf(request.getUpdatedStatus()));
+        try {
+            driver.setStatus(Status.valueOf(request.getUpdatedStatus().toUpperCase()));
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Unknown status: " + request.getUpdatedStatus());
+        }
 
         DriverProfileEntity updatedDriver = driverProfileRepository.save(driver);
 

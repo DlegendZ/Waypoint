@@ -4,9 +4,13 @@ import com.raynald.waypoint.mapper.UserMapper;
 import com.raynald.waypoint.dto.CreateUserRequest;
 import com.raynald.waypoint.dto.UserResponse;
 import com.raynald.waypoint.dto.LoginUserRequest;
+import com.raynald.waypoint.entity.DriverProfileEntity;
 import com.raynald.waypoint.entity.UserEntity;
+import com.raynald.waypoint.enums.Role;
+import com.raynald.waypoint.enums.Status;
 import com.raynald.waypoint.exception.EmailAlreadyExistsException;
 import com.raynald.waypoint.exception.InvalidCredentialsException;
+import com.raynald.waypoint.repository.DriverProfileRepository;
 import com.raynald.waypoint.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final DriverProfileRepository driverProfileRepository;
 
     public UserResponse registerUser(CreateUserRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -34,6 +39,14 @@ public class AuthService {
 
         UserEntity user = userMapper.toEntity(request, passwordHash);
         UserEntity saved_user = userRepository.save(user);
+
+        if (saved_user.getRole() == Role.DRIVER) {
+            DriverProfileEntity profile = DriverProfileEntity.builder()
+                    .userId(saved_user)
+                    .status(Status.OFFLINE)
+                    .build();
+            driverProfileRepository.save(profile);
+        }
 
         return userMapper.toResponse(saved_user);
     }

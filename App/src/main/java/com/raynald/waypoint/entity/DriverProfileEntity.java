@@ -30,10 +30,10 @@ public class DriverProfileEntity {
     @Column(nullable = false)
     private Status status;
 
-    @Column(nullable = false, name = "current_lat")
+    @Column(name = "current_lat")
     private Double currentLat;
 
-    @Column(nullable = false, name = "current_lng")
+    @Column(name = "current_lng")
     private Double currentLng;
 
     @UpdateTimestamp
