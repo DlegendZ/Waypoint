@@ -1,6 +1,6 @@
 package com.raynald.waypoint.config;
 
-import com.raynald.waypoint.security.JwtCookieChannelInterceptor;
+import com.raynald.waypoint.security.JwtChannelInterceptor;
 import com.raynald.waypoint.security.JwtHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -10,13 +10,12 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 
-
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final JwtCookieChannelInterceptor jwtCookieChannelInterceptor;
+    private final JwtChannelInterceptor jwtChannelInterceptor;
     private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
     @Override
@@ -35,6 +34,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(jwtCookieChannelInterceptor);
+        registration.interceptors(jwtChannelInterceptor);
     }
 }

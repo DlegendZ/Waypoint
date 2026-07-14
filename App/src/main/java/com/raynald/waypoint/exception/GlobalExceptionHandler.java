@@ -4,6 +4,7 @@ import com.raynald.waypoint.dto.ErrorResponse;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -60,6 +61,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ForbiddenActionException.class)
     public ResponseEntity<ErrorResponse> handleForbiddenAction(ForbiddenActionException exception) {
+        ErrorResponse error = new ErrorResponse(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException exception) {
         ErrorResponse error = new ErrorResponse(exception.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
