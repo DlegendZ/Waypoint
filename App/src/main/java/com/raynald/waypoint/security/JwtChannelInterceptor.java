@@ -66,8 +66,13 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                     .orElseThrow(() -> new UserNotFoundException("Authenticated user not found"));
 
             if (destination.startsWith("/topic/order/")) {
-                String[] parts = destination.substring(1).split("/");
-                Long orderId = Long.parseLong(parts[2]);
+                String orderIdSegment = destination.substring("/topic/order/".length());
+                Long orderId;
+                try {
+                    orderId = Long.parseLong(orderIdSegment);
+                } catch (NumberFormatException ex) {
+                    throw new IllegalArgumentException("Invalid order id in destination: " + destination);
+                }
 
                 OrderEntity order = orderRepository.findById(orderId)
                         .orElseThrow(() -> new OrderNotFoundException("Order not found"));
