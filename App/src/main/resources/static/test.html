@@ -8,12 +8,12 @@
 <body>
     <h2>WebSocket Test</h2>
 
-    <h3>1. Login dulu</h3>
+    <h3>User login</h3>
     <input id="email" type="text" placeholder="email" value="budi@example.com">
     <input id="password" type="password" placeholder="password" value="password123">
     <button onclick="login()">Login</button>
 
-    <h3>2. Baru connect WebSocket</h3>
+    <h3>Connect WebSocket</h3>
     <button onclick="connect()">Connect</button>
     <button onclick="sendMessage()">Send</button>
     <button onclick="disconnect()">Disconnect</button>
@@ -56,7 +56,7 @@
 
             stompClient.connect({}, function (frame) {
                 log('Connected: ' + frame);
-                stompClient.subscribe('/topic/order/test', function (message) {
+                stompClient.subscribe('/topic/order/1', function (message) {
                     log('Received: ' + message.body);
                 });
             }, function (error) {
