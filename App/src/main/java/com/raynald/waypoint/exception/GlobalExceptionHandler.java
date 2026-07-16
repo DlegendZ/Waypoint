@@ -70,4 +70,10 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(exception.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
+
+    @ExceptionHandler(LocationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleLocationNotFound(LocationNotFoundException exception) {
+        ErrorResponse error = new ErrorResponse(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
 }
