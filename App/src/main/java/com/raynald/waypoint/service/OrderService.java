@@ -1,25 +1,27 @@
 package com.raynald.waypoint.service;
 
+import com.raynald.waypoint.dto.CreateOrderRequest;
 import com.raynald.waypoint.dto.OrderResponse;
+import com.raynald.waypoint.entity.DriverProfileEntity;
 import com.raynald.waypoint.entity.OrderEntity;
 import com.raynald.waypoint.entity.OrderStageHistoryEntity;
 import com.raynald.waypoint.entity.UserEntity;
 import com.raynald.waypoint.enums.Stage;
+import com.raynald.waypoint.enums.Status;
 import com.raynald.waypoint.exception.ForbiddenActionException;
 import com.raynald.waypoint.exception.InvalidStageTransitionException;
 import com.raynald.waypoint.exception.OrderNotFoundException;
 import com.raynald.waypoint.exception.UserNotFoundException;
 import com.raynald.waypoint.mapper.OrderMapper;
+import com.raynald.waypoint.repository.DriverProfileRepository;
 import com.raynald.waypoint.repository.OrderRepository;
 import com.raynald.waypoint.repository.OrderStageHistoryRepository;
 import com.raynald.waypoint.repository.UserRepository;
+import com.raynald.waypoint.util.HaversineUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
     private final OrderStageHistoryRepository orderStageHistoryRepository;
+    private final DriverProfileRepository driverProfileRepository;
 
     private static final Map<Stage, Set<Stage>> ALLOWED_TRANSITIONS =
             new EnumMap<>(Stage.class);
@@ -77,5 +80,41 @@ public class OrderService {
         orderStageHistoryRepository.save(history);
 
         return orderMapper.toResponse(updatedOrder);
+    }
+
+    public OrderResponse createOrder(CreateOrderRequest request, String customerEmail) {
+        UserEntity userId = userRepository.findByEmail(customerEmail)
+                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found"));
+
+        if (request.getPickUpLat() == null || request.getPickUpLat() < -90 || request.getPickUpLat() > 90
+                || request.getPickUpLng() == null || request.getPickUpLng() < -180 || request.getPickUpLng() > 180) {
+            throw new IllegalArgumentException("Invalid latitude/longitude");
+        }
+
+        if (request.getDropOffLat() == null || request.getDropOffLat() < -90 || request.getDropOffLat() > 90
+                || request.getDropOffLng() == null || request.getDropOffLng() < -180 || request.getDropOffLng() > 180) {
+            throw new IllegalArgumentException("Invalid latitude/longitude");
+        }
+
+        List<DriverProfileEntity> drivers = driverProfileRepository.findByStatus(Status.ONLINE_AVAILABLE);
+
+        Double closest_d = null;
+        DriverProfileEntity driverProfile = null;
+
+        for (DriverProfileEntity driver : drivers) {
+            Double d = HaversineUtil.haversine(request.getPickUpLat(), request.getPickUpLng(), driver.getCurrentLat(), driver.getCurrentLng());
+
+            if (closest_d == null || d < closest_d) {
+                closest_d = d;
+                driverProfile = driver;
+            }
+        }
+
+        OrderEntity order = orderMapper.toEntity(request, userId, driverProfile.getUserId());
+        order.setCurrentStage(Stage.ASSIGNED);
+        driverProfile.setStatus(Status.ONLINE_BUSY);
+        OrderEntity updated_order = orderRepository.save(order);
+        driverProfileRepository.save(driverProfile);
+        return orderMapper.toResponse(updated_order);
     }
 }

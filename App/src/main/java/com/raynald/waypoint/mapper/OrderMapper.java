@@ -19,7 +19,6 @@ public class OrderMapper {
                 .pickUpLng(request.getPickUpLng())
                 .dropOffLat(request.getDropOffLat())
                 .dropOffLng(request.getDropOffLng())
-                .currentStage(Stage.valueOf(request.getCurrentStage().toUpperCase()))
                 .build();
     }
 

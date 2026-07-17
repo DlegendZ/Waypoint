@@ -44,7 +44,7 @@ public class OrderEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "current_stage")
-    private Stage currentStage;
+    private Stage currentStage = Stage.CREATED;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false, name = "created_at")
