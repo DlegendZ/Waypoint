@@ -1,13 +1,16 @@
 package com.raynald.waypoint.controller;
 
+import com.raynald.waypoint.dto.CreateOrderRequest;
 import com.raynald.waypoint.dto.OrderResponse;
 import com.raynald.waypoint.dto.UpdateOrderStatusRequest;
 import com.raynald.waypoint.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+
+    @PostMapping
+    public ResponseEntity<OrderResponse> createOrder(
+            @RequestBody CreateOrderRequest request,
+            Authentication authentication) {
+        String customerEmail = authentication.getName();
+        OrderResponse response = orderService.createOrder(request, customerEmail);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<OrderResponse> updateStatus(

@@ -11,10 +11,10 @@ public class OrderResponse {
     private Long id;
     private Long customerId;
     private Long driverId;
-    private Float pickUpLat;
-    private Float pickUpLng;
-    private Float dropOffLat;
-    private Float dropOffLng;
+    private Double pickUpLat;
+    private Double pickUpLng;
+    private Double dropOffLat;
+    private Double dropOffLng;
     private String currentStage;
     private String createdAt;
 }

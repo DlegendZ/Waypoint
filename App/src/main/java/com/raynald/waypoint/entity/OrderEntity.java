@@ -31,17 +31,18 @@ public class OrderEntity {
     private UserEntity driverId;
 
     @Column(nullable = false, name = "pick_up_lat")
-    private Float pickUpLat;
+    private Double pickUpLat;
 
     @Column(nullable = false, name = "pick_up_lng")
-    private Float pickUpLng;
+    private Double pickUpLng;
 
     @Column(nullable = false, name = "drop_off_lat")
-    private Float dropOffLat;
+    private Double dropOffLat;
 
     @Column(nullable = false, name = "drop_off_lng")
-    private Float dropOffLng;
+    private Double dropOffLng;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "current_stage")
     private Stage currentStage = Stage.CREATED;

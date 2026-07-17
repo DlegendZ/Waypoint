@@ -102,6 +102,10 @@ public class OrderService {
         DriverProfileEntity driverProfile = null;
 
         for (DriverProfileEntity driver : drivers) {
+            if (driver.getCurrentLat() == null || driver.getCurrentLng() == null) {
+                continue;
+            }
+
             Double d = HaversineUtil.haversine(request.getPickUpLat(), request.getPickUpLng(), driver.getCurrentLat(), driver.getCurrentLng());
 
             if (closest_d == null || d < closest_d) {
@@ -110,11 +114,16 @@ public class OrderService {
             }
         }
 
-        OrderEntity order = orderMapper.toEntity(request, userId, driverProfile.getUserId());
-        order.setCurrentStage(Stage.ASSIGNED);
-        driverProfile.setStatus(Status.ONLINE_BUSY);
+        UserEntity assignedDriverUser = driverProfile != null ? driverProfile.getUserId() : null;
+        OrderEntity order = orderMapper.toEntity(request, userId, assignedDriverUser);
+
+        if (driverProfile != null) {
+            order.setCurrentStage(Stage.ASSIGNED);
+            driverProfile.setStatus(Status.ONLINE_BUSY);
+            driverProfileRepository.save(driverProfile);
+        }
+
         OrderEntity updated_order = orderRepository.save(order);
-        driverProfileRepository.save(driverProfile);
         return orderMapper.toResponse(updated_order);
     }
 }

@@ -32,10 +32,11 @@ public class OrderMapper {
     }
 
     public OrderResponse toResponse(OrderEntity order) {
+        Long driverId = order.getDriverId() != null ? order.getDriverId().getId() : null;
         return OrderResponse.builder()
                 .id(order.getId())
                 .customerId(order.getCustomerId().getId())
-                .driverId(order.getDriverId().getId())
+                .driverId(driverId)
                 .pickUpLat(order.getPickUpLat())
                 .pickUpLng(order.getPickUpLng())
                 .dropOffLat(order.getDropOffLat())
