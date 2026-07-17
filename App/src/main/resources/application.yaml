@@ -34,3 +34,6 @@ logging:
     root: ${LOGGING_LEVEL_ROOT}
     com.raynald: INFO
 
+properties:
+  vehicle:
+    speed: 40

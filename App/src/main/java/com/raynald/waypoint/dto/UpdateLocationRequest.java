@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class UpdateLocation {
+public class UpdateLocationRequest {
     private Double lat;
     private Double lng;
 }

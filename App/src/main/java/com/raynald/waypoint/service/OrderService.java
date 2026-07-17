@@ -17,7 +17,7 @@ import com.raynald.waypoint.repository.DriverProfileRepository;
 import com.raynald.waypoint.repository.OrderRepository;
 import com.raynald.waypoint.repository.OrderStageHistoryRepository;
 import com.raynald.waypoint.repository.UserRepository;
-import com.raynald.waypoint.util.HaversineUtil;
+import com.raynald.waypoint.util.GeoLocationHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -106,7 +106,7 @@ public class OrderService {
                 continue;
             }
 
-            Double d = HaversineUtil.haversine(request.getPickUpLat(), request.getPickUpLng(), driver.getCurrentLat(), driver.getCurrentLng());
+            Double d = GeoLocationHelper.haversine(request.getPickUpLat(), request.getPickUpLng(), driver.getCurrentLat(), driver.getCurrentLng());
 
             if (closest_d == null || d < closest_d) {
                 closest_d = d;

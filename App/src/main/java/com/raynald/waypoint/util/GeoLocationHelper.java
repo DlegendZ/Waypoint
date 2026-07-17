@@ -1,6 +1,6 @@
 package com.raynald.waypoint.util;
 
-public class HaversineUtil {
+public class GeoLocationHelper {
 
     public static Double haversine(
             Double lat1, Double lng1,

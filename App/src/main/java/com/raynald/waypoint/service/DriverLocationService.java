@@ -1,6 +1,7 @@
 package com.raynald.waypoint.service;
 
-import com.raynald.waypoint.dto.UpdateLocation;
+import com.raynald.waypoint.dto.LocationBroadcastResponse;
+import com.raynald.waypoint.dto.UpdateLocationRequest;
 import com.raynald.waypoint.entity.OrderEntity;
 import com.raynald.waypoint.entity.UserEntity;
 import com.raynald.waypoint.enums.Stage;
@@ -10,10 +11,14 @@ import com.raynald.waypoint.exception.OrderNotFoundException;
 import com.raynald.waypoint.exception.UserNotFoundException;
 import com.raynald.waypoint.repository.OrderRepository;
 import com.raynald.waypoint.repository.UserRepository;
+import com.raynald.waypoint.util.GeoLocationHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -25,9 +30,12 @@ public class DriverLocationService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
 
+    @Value("${properties.vehicle.speed}")
+    private Integer speed;
+
     private static final Set<Stage> ACTIVE_STAGES = EnumSet.of(Stage.ASSIGNED, Stage.PICKED_UP, Stage.ON_THE_WAY);
 
-    public void saveLocation(Long orderId, UpdateLocation request, String actorEmail) {
+    public void saveLocation(Long orderId, UpdateLocationRequest request, String actorEmail) {
         if (request.getLat() == null || request.getLat() < -90 || request.getLat() > 90
                 || request.getLng() == null || request.getLng() < -180 || request.getLng() > 180) {
             throw new IllegalArgumentException("Invalid latitude/longitude");
@@ -51,14 +59,28 @@ public class DriverLocationService {
         redisTemplate.opsForValue().set(key, request);
     }
 
-    public UpdateLocation getLocation(Long orderId) {
-        String key = "driver-location:" + orderId;
-        Object location = redisTemplate.opsForValue().get(key);
+    public LocationBroadcastResponse getLocation(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
 
-        if (location == null) {
+        String key = "driver-location:" + orderId;
+        Object result = redisTemplate.opsForValue().get(key);
+
+        if (result == null) {
             throw new LocationNotFoundException("Driver Location not found");
         }
 
-        return (UpdateLocation) location;
+        UpdateLocationRequest location = (UpdateLocationRequest) result;
+
+        Double distance = GeoLocationHelper.haversine(order.getPickUpLat(), order.getPickUpLng(), location.getLat(), location.getLng());
+        Integer eta = (int) Math.round(distance/speed);
+
+        return LocationBroadcastResponse.builder()
+                .lat(location.getLat())
+                .lng(location.getLng())
+                .eta(eta)
+                .distance(distance)
+                .timestamp(String.valueOf(Instant.now().getEpochSecond()))
+                .build();
     }
 }
