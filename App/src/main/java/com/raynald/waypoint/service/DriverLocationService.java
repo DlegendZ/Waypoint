@@ -15,7 +15,6 @@ import com.raynald.waypoint.util.GeoLocationHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -29,6 +28,7 @@ public class DriverLocationService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final LocationHistoryService locationHistoryService;
 
     @Value("${properties.vehicle.speed}")
     private Integer speed;
@@ -57,6 +57,8 @@ public class DriverLocationService {
 
         String key = "driver-location:" + orderId;
         redisTemplate.opsForValue().set(key, request);
+
+        locationHistoryService.saveLocationHistory(order, request);
     }
 
     public LocationBroadcastResponse getLocation(Long orderId) {
