@@ -20,7 +20,7 @@ public class DispatchService {
     private final DriverProfileRepository driverProfileRepository;
     private final OrderRepository orderRepository;
 
-    @Cacheable(value = "disipatchOverview", key = "'overviewStats'")
+    @Cacheable(value = "dispatchOverview", key = "'overviewStats'")
     public DispatchOverview getOverview() {
         List<Object[]> totalOrderByStage = orderRepository.countOrderByStage();
 

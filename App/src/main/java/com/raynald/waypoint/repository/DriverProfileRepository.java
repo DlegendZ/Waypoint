@@ -16,6 +16,6 @@ public interface DriverProfileRepository extends JpaRepository<DriverProfileEnti
 
     List<DriverProfileEntity> findByStatus(Status status);
 
-    @Query("SELECT d.Status, COUNT(d) FROM DriverProfileEntity d GROUP BY d.Status")
+    @Query("SELECT d.status, COUNT(d) FROM DriverProfileEntity d GROUP BY d.status")
     List<Object[]> countDriverProfileByStatus();
 }
