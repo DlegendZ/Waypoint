@@ -25,6 +25,7 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/drivers/**").hasRole("DRIVER")
+                        .requestMatchers("/api/dispatch/**").hasRole("DISPATCHER")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
                         .requestMatchers("/test.html").permitAll()
                         .anyRequest().authenticated())

@@ -20,6 +20,11 @@ spring:
         format_sql: true
     open-in-view: true
 
+  cache:
+    type: redis
+    redis:
+      time-to-live: 45s
+
   data:
     redis:
       host: localhost
