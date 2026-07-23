@@ -4,6 +4,7 @@ import com.raynald.waypoint.dto.CreateOrderRequest;
 import com.raynald.waypoint.dto.OrderResponse;
 import com.raynald.waypoint.dto.UpdateOrderStatusRequest;
 import com.raynald.waypoint.service.OrderService;
+import com.raynald.waypoint.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +22,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(
             @RequestBody CreateOrderRequest request,
             Authentication authentication) {
         String customerEmail = authentication.getName();
+
+        if (!rateLimiterService.isUserAllowed(customerEmail)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(null);
+        }
+
         OrderResponse response = orderService.createOrder(request, customerEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

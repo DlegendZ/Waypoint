@@ -5,6 +5,8 @@ import com.raynald.waypoint.dto.UserResponse;
 import com.raynald.waypoint.dto.LoginUserRequest;
 import com.raynald.waypoint.security.JwtUtil;
 import com.raynald.waypoint.service.AuthService;
+import com.raynald.waypoint.service.RateLimiterService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +24,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@RequestBody CreateUserRequest request) {
@@ -30,7 +33,17 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> loginUser(@RequestBody LoginUserRequest request, HttpServletResponse servletResponse) {
+    public ResponseEntity<UserResponse> loginUser(@RequestBody LoginUserRequest request, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
+        String ip = servletRequest.getHeader("X-Forwarded-For");
+
+        if (ip == null || ip.isEmpty()) {
+            ip = servletRequest.getRemoteAddr();
+        }
+
+        if (!rateLimiterService.isIpAllowed(ip)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(null);
+        }
+
         UserResponse response = authService.loginUser(request);
 
         ResponseCookie cookie = ResponseCookie.from("token", jwtUtil.generateToken(response.getEmail(), response.getRole()))
