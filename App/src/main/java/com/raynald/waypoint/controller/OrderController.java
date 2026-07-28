@@ -1,11 +1,15 @@
 package com.raynald.waypoint.controller;
 
 import com.raynald.waypoint.dto.CreateOrderRequest;
+import com.raynald.waypoint.dto.ErrorResponse;
 import com.raynald.waypoint.dto.OrderResponse;
 import com.raynald.waypoint.dto.UpdateOrderStatusRequest;
 import com.raynald.waypoint.service.OrderService;
 import com.raynald.waypoint.service.RateLimiterService;
+import com.raynald.waypoint.util.ClientIpUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,13 +29,25 @@ public class OrderController {
     private final RateLimiterService rateLimiterService;
 
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(
+    public ResponseEntity<?> createOrder(
             @RequestBody CreateOrderRequest request,
-            Authentication authentication) {
+            Authentication authentication,
+            HttpServletRequest servletRequest) {
         String customerEmail = authentication.getName();
 
-        if (!rateLimiterService.isUserAllowed(customerEmail)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(null);
+        RateLimiterService.RateLimitResult userLimit = rateLimiterService.checkUserLimit(customerEmail);
+        if (!userLimit.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(userLimit.retryAfterSeconds()))
+                    .body(new ErrorResponse("Too many orders created. Try again in " + userLimit.retryAfterSeconds() + "s."));
+        }
+
+        String ip = ClientIpUtil.resolve(servletRequest);
+        RateLimiterService.RateLimitResult ipLimit = rateLimiterService.checkIpLimit(ip);
+        if (!ipLimit.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(ipLimit.retryAfterSeconds()))
+                    .body(new ErrorResponse("Too many orders created from this network. Try again in " + ipLimit.retryAfterSeconds() + "s."));
         }
 
         OrderResponse response = orderService.createOrder(request, customerEmail);

@@ -1,11 +1,13 @@
 package com.raynald.waypoint.controller;
 
 import com.raynald.waypoint.dto.CreateUserRequest;
+import com.raynald.waypoint.dto.ErrorResponse;
 import com.raynald.waypoint.dto.UserResponse;
 import com.raynald.waypoint.dto.LoginUserRequest;
 import com.raynald.waypoint.security.JwtUtil;
 import com.raynald.waypoint.service.AuthService;
 import com.raynald.waypoint.service.RateLimiterService;
+import com.raynald.waypoint.util.ClientIpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,15 +35,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> loginUser(@RequestBody LoginUserRequest request, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
-        String ip = servletRequest.getHeader("X-Forwarded-For");
+    public ResponseEntity<?> loginUser(@RequestBody LoginUserRequest request, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
+        String ip = ClientIpUtil.resolve(servletRequest);
 
-        if (ip == null || ip.isEmpty()) {
-            ip = servletRequest.getRemoteAddr();
-        }
-
-        if (!rateLimiterService.isIpAllowed(ip)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(null);
+        RateLimiterService.RateLimitResult ipLimit = rateLimiterService.checkIpLimit(ip);
+        if (!ipLimit.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(ipLimit.retryAfterSeconds()))
+                    .body(new ErrorResponse("Too many login attempts. Try again in " + ipLimit.retryAfterSeconds() + "s."));
         }
 
         UserResponse response = authService.loginUser(request);
