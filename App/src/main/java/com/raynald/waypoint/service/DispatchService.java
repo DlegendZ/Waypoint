@@ -1,6 +1,8 @@
 package com.raynald.waypoint.service;
 
 import com.raynald.waypoint.dto.DispatchOverview;
+import com.raynald.waypoint.dto.FlaggedOrder;
+import com.raynald.waypoint.entity.OrderEntity;
 import com.raynald.waypoint.enums.Stage;
 import com.raynald.waypoint.enums.Status;
 import com.raynald.waypoint.repository.DriverProfileRepository;
@@ -38,10 +40,22 @@ public class DispatchService {
             mapDriverByStatus.put(Status.valueOf((String) driverByStatus[0]), (Long) driverByStatus[1]);
         }
 
+        List<FlaggedOrder> flaggedOrders = orderRepository.findByFlaggedTrue().stream()
+                .map(this::toFlaggedOrder)
+                .toList();
+
         return DispatchOverview.builder()
                 .orderByStage(mapOrderByStage)
                 .driverByStatus(mapDriverByStatus)
-//                .flaggedOrders()
+                .flaggedOrders(flaggedOrders)
+                .build();
+    }
+
+    private FlaggedOrder toFlaggedOrder(OrderEntity order) {
+        return FlaggedOrder.builder()
+                .orderId(order.getId())
+                .reason(order.getFlagReason())
+                .flaggedAt(order.getFlaggedAt() != null ? order.getFlaggedAt().toString() : null)
                 .build();
     }
 }

@@ -50,4 +50,14 @@ public class OrderEntity {
     @CreationTimestamp
     @Column(nullable = false, updatable = false, name = "created_at")
     private LocalDateTime createdAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean flagged = false;
+
+    @Column(name = "flag_reason")
+    private String flagReason;
+
+    @Column(name = "flagged_at")
+    private LocalDateTime flaggedAt;
 }
