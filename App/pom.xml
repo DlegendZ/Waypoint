@@ -74,6 +74,19 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Only the container class libraries are needed - containers are started manually in a
+		     static initializer (see AbstractIntegrationTest), not via @Testcontainers/@Container,
+		     so neither spring-boot-testcontainers' @ServiceConnection nor the JUnit5 extension is used. -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>

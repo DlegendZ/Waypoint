@@ -1,10 +1,8 @@
 package com.raynald.waypoint;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class WaypointApplicationTests {
+class WaypointApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void contextLoads() {

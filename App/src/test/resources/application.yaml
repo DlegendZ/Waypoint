@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: waypoint
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: true
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 45s
+
+jwt:
+  secret: test-only-secret-key-not-for-production-1234567890abcdef
+  expiration-ms: 7200000
+
+logging:
+  level:
+    root: INFO
+    com.raynald: INFO
+
+properties:
+  vehicle:
+    speed: 40
