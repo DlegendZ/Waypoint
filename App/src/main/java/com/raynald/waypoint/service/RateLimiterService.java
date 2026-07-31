@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RateLimiterService {
 
-    private final RedisTemplate<String, Long> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     private static final int USER_LIMIT = 10;
     private static final int IP_LIMIT = 5;
