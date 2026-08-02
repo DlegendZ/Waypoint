@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   application:
@@ -14,7 +14,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -36,7 +36,7 @@ jwt:
 
 logging:
   level:
-    root: ${LOGGING_LEVEL_ROOT}
+    root: ${LOGGING_LEVEL_ROOT:INFO}
     com.raynald: INFO
 
 properties:

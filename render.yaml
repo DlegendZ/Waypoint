@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: waypoint-api
+    runtime: docker
+    dockerfilePath: ./App/Dockerfile
+    dockerContext: ./App
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      # Postgres and Redis aren't declared as managed Render resources here - Render's free Postgres
+      # gives a "postgres://" connection string, not the "jdbc:postgresql://" Spring Boot needs, and
+      # there's no free managed Redis on Render anymore. Simplest and least surprising is to point
+      # DATABASE_URL/REDIS_HOST/REDIS_PORT at whatever you provision (Render Postgres reformatted to
+      # jdbc:, or an external free tier like Neon/Upstash) and paste the values in by hand - see the
+      # deploy notes for exact steps. sync:false means Render prompts for a value instead of guessing one.
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_EXPIRATION_TIME
+        value: "7200000"
+      - key: LOGGING_LEVEL_ROOT
+        value: INFO
