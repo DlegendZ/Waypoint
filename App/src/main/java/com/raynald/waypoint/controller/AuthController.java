@@ -10,7 +10,9 @@ import com.raynald.waypoint.service.RateLimiterService;
 import com.raynald.waypoint.util.ClientIpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -28,14 +30,17 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final RateLimiterService rateLimiterService;
 
+    @Value("${COOKIE_SECURE:false}")
+    private boolean cookieSecure;
+
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> registerUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody CreateUserRequest request) {
         UserResponse response = authService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginUserRequest request, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginUserRequest request, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         String ip = ClientIpUtil.resolve(servletRequest);
 
         RateLimiterService.RateLimitResult ipLimit = rateLimiterService.checkIpLimit(ip);
@@ -49,7 +54,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("token", jwtUtil.generateToken(response.getEmail(), response.getRole()))
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(Duration.ofMillis(jwtUtil.getExpirationMs()))
                 .sameSite("Lax")

@@ -7,7 +7,9 @@ import com.raynald.waypoint.dto.UpdateOrderStatusRequest;
 import com.raynald.waypoint.service.OrderService;
 import com.raynald.waypoint.service.RateLimiterService;
 import com.raynald.waypoint.util.ClientIpUtil;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "cookieAuth")
 public class OrderController {
 
     private final OrderService orderService;
@@ -30,7 +33,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<?> createOrder(
-            @RequestBody CreateOrderRequest request,
+            @Valid @RequestBody CreateOrderRequest request,
             Authentication authentication,
             HttpServletRequest servletRequest) {
         String customerEmail = authentication.getName();
@@ -57,7 +60,7 @@ public class OrderController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<OrderResponse> updateStatus(
             @PathVariable Long id,
-            @RequestBody UpdateOrderStatusRequest request,
+            @Valid @RequestBody UpdateOrderStatusRequest request,
             Authentication authentication) {
         String actorEmail = authentication.getName();
         OrderResponse response = orderService.updateStatus(id, request.getUpdatedStage(), actorEmail);

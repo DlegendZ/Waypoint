@@ -23,12 +23,12 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/drivers/**").hasRole("DRIVER")
                         .requestMatchers("/api/dispatch/**").hasRole("DISPATCHER")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
-                        .requestMatchers("/test.html").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
