@@ -21,8 +21,6 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      # mvnw's executable bit is easy to lose on a Windows checkout/commit; set it explicitly rather
-      # than relying on it surviving git's file mode tracking.
       - name: Ensure mvnw is executable
         run: chmod +x mvnw
       - name: Checkstyle
@@ -41,9 +39,6 @@ jobs:
           cache: maven
       - name: Ensure mvnw is executable
         run: chmod +x mvnw
-      # Docker is preinstalled and running on ubuntu-latest runners, so the Testcontainers-backed
-      # integration tests (Day 19) work with no extra "services:" setup - they start their own
-      # throwaway Postgres/Redis containers exactly like they do locally.
       - name: Run tests
         run: ./mvnw -B test
       - name: Upload test reports
@@ -60,8 +55,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Builds the same multi-stage Dockerfile from Day 22 - this doubles as the strongest possible
-      # "does the app actually build and package correctly" check, independent of the Maven test JVM.
       - name: Build image
         run: docker build -t waypoint-app:${{ github.sha }} .
 
@@ -72,9 +65,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # TODO (Day 24): wire up the real deploy target (Railway/Render). Kept as an explicit,
-      # non-destructive placeholder for now so the pipeline shape (lint -> test -> build -> deploy,
-      # each gated on the previous succeeding) is in place before credentials/target exist.
       - name: Deploy (placeholder)
         run: |
           echo "Build ${{ github.sha }} passed lint, test, and build."
