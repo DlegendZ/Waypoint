@@ -31,10 +31,10 @@ Customer Client              Driver Client
   |  WS/STOMP (subscribe)       |  WS/STOMP (publish location)
   v                             v
 +----------------------------------------------------+
-|                Spring Boot App (Waypoint API)        |
+|         Spring Boot App (Waypoint API)                |
 |  Controller layer  -> REST + STOMP message mappings   |
-|  Service layer      -> state machine, matching, ETA,  |
-|                         authorization                 |
+|  Service layer     -> state machine, matching, ETA,   |
+|                       authorization                   |
 |  Repository layer   -> Spring Data JPA                |
 +----------------------------------------------------+
         |                              |
