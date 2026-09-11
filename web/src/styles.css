@@ -1338,6 +1338,17 @@ a {
 
 /* ------------------------------------------------------------------ small screens */
 
+/*
+ * The map is a self-contained layer. Leaflet stacks its panes at z-index 200-1000 and, while zooming
+ * (e.g. fitting the view to a new delivery), scales tile layers far past the map's edges. Isolating and
+ * clipping here keeps all of that inside the map's own box, so it can't paint over the top bar or panel.
+ */
+.workspace__map {
+  overflow: hidden;
+  isolation: isolate;
+  contain: paint;
+}
+
 @media (max-width: 860px) {
   .shell {
     height: auto;
@@ -1346,15 +1357,13 @@ a {
 
   .workspace {
     grid-template-columns: 1fr;
-    grid-template-rows: 46vh auto;
+    grid-template-rows: 42vh auto;
   }
 
+  /* Above the panel, scrolling away with the page, so the order details get the whole screen. */
   .workspace__map {
     order: -1;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    height: 46vh;
+    height: 42vh;
   }
 
   .panel {

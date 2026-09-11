@@ -1,5 +1,7 @@
 package com.raynald.waypoint;
 
+import com.raynald.waypoint.enums.Status;
+import com.raynald.waypoint.repository.DriverProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,8 +47,23 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private DriverProfileRepository driverProfileRepository;
+
     @BeforeEach
     void flushRedis() {
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
+    }
+
+    /**
+     * All test classes share one Postgres container, and nearest-driver matching has no distance cap, so a
+     * driver left online by one test would be matched by another's order. Test class order differs between
+     * machines (alphabetical on Windows, not on the Linux CI runner), so every test starts with no one online.
+     */
+    @BeforeEach
+    void takeAllDriversOffline() {
+        var profiles = driverProfileRepository.findAll();
+        profiles.forEach(profile -> profile.setStatus(Status.OFFLINE));
+        driverProfileRepository.saveAll(profiles);
     }
 }
