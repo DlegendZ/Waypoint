@@ -587,8 +587,12 @@ a {
   filter: grayscale(1) contrast(0.88) brightness(1.06);
 }
 
-.map--pickable .leaflet-container,
-.map--pickable.leaflet-container {
+.map__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.map--pickable .leaflet-container {
   cursor: crosshair;
 }
 

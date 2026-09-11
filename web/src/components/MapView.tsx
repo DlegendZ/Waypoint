@@ -221,12 +221,12 @@ export function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fitKey]);
 
+  // Leaflet adds its own classes (leaflet-container, …) to the element it's mounted on. That element's
+  // className must never be managed by React: a re-render with a different class string would wipe
+  // them, and the map would lose its overflow clipping and spill over the rest of the page.
   return (
-    <div
-      ref={containerRef}
-      className={`map ${onMapClick ? 'map--pickable' : ''} ${className ?? ''}`}
-      role="region"
-      aria-label={ariaLabel}
-    />
+    <div className={`map ${onMapClick ? 'map--pickable' : ''} ${className ?? ''}`} role="region" aria-label={ariaLabel}>
+      <div ref={containerRef} className="map__canvas" />
+    </div>
   );
 }
