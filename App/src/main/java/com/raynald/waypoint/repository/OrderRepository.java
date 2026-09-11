@@ -19,4 +19,10 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     List<OrderEntity> findByDriverIdAndCurrentStageIn(UserEntity driverId, Collection<Stage> stages);
 
     List<OrderEntity> findByFlaggedTrue();
+
+    List<OrderEntity> findByCustomerIdOrderByCreatedAtDesc(UserEntity customerId);
+
+    List<OrderEntity> findByDriverIdOrderByCreatedAtDesc(UserEntity driverId);
+
+    List<OrderEntity> findTop100ByOrderByCreatedAtDesc();
 }

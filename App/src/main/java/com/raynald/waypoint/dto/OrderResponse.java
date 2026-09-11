@@ -10,11 +10,15 @@ import lombok.Data;
 public class OrderResponse {
     private Long id;
     private Long customerId;
+    private String customerName;
     private Long driverId;
+    private String driverName;
     private Double pickUpLat;
     private Double pickUpLng;
     private Double dropOffLat;
     private Double dropOffLng;
     private String currentStage;
     private String createdAt;
+    private boolean flagged;
+    private String flagReason;
 }

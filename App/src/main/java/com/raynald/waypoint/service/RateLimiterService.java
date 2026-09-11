@@ -17,11 +17,15 @@ public class RateLimiterService {
     private static final long WINDOW_SECONDS = 60;
 
     public RateLimitResult checkUserLimit(String userEmail) {
-        return check("rate-limit:" + userEmail, USER_LIMIT);
+        return check("rate-limit:order:user:" + userEmail, USER_LIMIT);
     }
 
-    public RateLimitResult checkIpLimit(String ip) {
-        return check("rate-limit:" + ip, IP_LIMIT);
+    /**
+     * Each scope ("login", "order") gets its own per-IP counter, so signing in a few times doesn't
+     * eat into the budget for creating orders from the same network (and vice versa).
+     */
+    public RateLimitResult checkIpLimit(String scope, String ip) {
+        return check("rate-limit:" + scope + ":ip:" + ip, IP_LIMIT);
     }
 
     private RateLimitResult check(String key, int limit) {

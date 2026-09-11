@@ -167,6 +167,61 @@ class OrderServiceTest {
         assertThat(stageSeenByMapper.get()).isEqualTo(Stage.ASSIGNED);
     }
 
+    @Test
+    void updateStatus_owningCustomer_canCancel() {
+        OrderEntity order = orderAt(Stage.ASSIGNED, driver);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(userRepository.findByEmail("customer@example.com")).thenReturn(Optional.of(customer));
+        when(orderMapper.toEntity(eq(Stage.CANCELLED), any(), any())).thenReturn(mock(OrderStageHistoryEntity.class));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        orderService.updateStatus(100L, "CANCELLED", "customer@example.com");
+
+        assertThat(order.getCurrentStage()).isEqualTo(Stage.CANCELLED);
+    }
+
+    @Test
+    void updateStatus_owningCustomer_cannotAdvanceStages() {
+        OrderEntity order = orderAt(Stage.ASSIGNED, driver);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(userRepository.findByEmail("customer@example.com")).thenReturn(Optional.of(customer));
+
+        assertThatThrownBy(() -> orderService.updateStatus(100L, "PICKED_UP", "customer@example.com"))
+                .isInstanceOf(ForbiddenActionException.class);
+        assertThat(order.getCurrentStage()).isEqualTo(Stage.ASSIGNED);
+    }
+
+    @Test
+    void updateStatus_delivered_releasesBusyDriverBackToAvailable() {
+        OrderEntity order = orderAt(Stage.ON_THE_WAY, driver);
+        DriverProfileEntity profile = DriverProfileEntity.builder().id(1L).userId(driver).status(Status.ONLINE_BUSY).build();
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(userRepository.findByEmail("driver@example.com")).thenReturn(Optional.of(driver));
+        when(orderMapper.toEntity(eq(Stage.DELIVERED), any(), any())).thenReturn(mock(OrderStageHistoryEntity.class));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.findByDriverIdAndCurrentStageIn(eq(driver), any())).thenReturn(List.of());
+        when(driverProfileRepository.findByUserId(driver)).thenReturn(Optional.of(profile));
+
+        orderService.updateStatus(100L, "DELIVERED", "driver@example.com");
+
+        assertThat(profile.getStatus()).isEqualTo(Status.ONLINE_AVAILABLE);
+        verify(driverProfileRepository).save(profile);
+    }
+
+    @Test
+    void updateStatus_delivered_keepsDriverBusyWhileAnotherOrderIsActive() {
+        OrderEntity order = orderAt(Stage.ON_THE_WAY, driver);
+        when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(userRepository.findByEmail("driver@example.com")).thenReturn(Optional.of(driver));
+        when(orderMapper.toEntity(eq(Stage.DELIVERED), any(), any())).thenReturn(mock(OrderStageHistoryEntity.class));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.findByDriverIdAndCurrentStageIn(eq(driver), any())).thenReturn(List.of(orderAt(Stage.ASSIGNED, driver)));
+
+        orderService.updateStatus(100L, "DELIVERED", "driver@example.com");
+
+        verify(driverProfileRepository, never()).save(any());
+    }
+
     private DriverProfileEntity driverProfile(long id, Double lat, Double lng, Status status) {
         UserEntity user = UserEntity.builder().id(id).email("driver" + id + "@example.com").build();
         return DriverProfileEntity.builder().id(id).userId(user).status(status).currentLat(lat).currentLng(lng).build();

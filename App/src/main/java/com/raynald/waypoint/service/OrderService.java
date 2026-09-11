@@ -36,6 +36,9 @@ public class OrderService {
     private static final Map<Stage, Set<Stage>> ALLOWED_TRANSITIONS =
             new EnumMap<>(Stage.class);
 
+    private static final Set<Stage> ACTIVE_STAGES = EnumSet.of(Stage.ASSIGNED, Stage.PICKED_UP, Stage.ON_THE_WAY);
+    private static final Set<Stage> TERMINAL_STAGES = EnumSet.of(Stage.DELIVERED, Stage.CANCELLED);
+
     static {
         ALLOWED_TRANSITIONS.put(Stage.CREATED, EnumSet.of(Stage.ASSIGNED, Stage.CANCELLED));
         ALLOWED_TRANSITIONS.put(Stage.ASSIGNED, EnumSet.of(Stage.PICKED_UP, Stage.CANCELLED));
@@ -56,7 +59,10 @@ public class OrderService {
         UserEntity actor = userRepository.findByEmail(actorEmail)
                 .orElseThrow(() -> new UserNotFoundException("Authenticated user not found"));
 
-        if (order.getDriverId() == null || !order.getDriverId().getId().equals(actor.getId())) {
+        boolean isAssignedDriver = order.getDriverId() != null && order.getDriverId().getId().equals(actor.getId());
+        boolean isOwningCustomer = order.getCustomerId() != null && order.getCustomerId().getId().equals(actor.getId());
+
+        if (!isAssignedDriver && !isOwningCustomer) {
             throw new ForbiddenActionException("You are not the driver assigned to this order.");
         }
 
@@ -66,6 +72,11 @@ public class OrderService {
             requestedStage = Stage.valueOf(updatedStageRaw.toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new InvalidStageTransitionException("Unknown stage: " + updatedStageRaw);
+        }
+
+        // The owning customer may only cancel; every other move belongs to the assigned driver.
+        if (!isAssignedDriver && requestedStage != Stage.CANCELLED) {
+            throw new ForbiddenActionException("Only the assigned driver can move this order to " + requestedStage + ".");
         }
 
         if (!isValidTransition(currentStage, requestedStage)) {
@@ -79,7 +90,25 @@ public class OrderService {
         OrderEntity updatedOrder = orderRepository.save(order);
         orderStageHistoryRepository.save(history);
 
+        if (TERMINAL_STAGES.contains(requestedStage) && order.getDriverId() != null) {
+            releaseDriver(order.getDriverId());
+        }
+
         return orderMapper.toResponse(updatedOrder);
+    }
+
+    /** Once a driver has no active orders left, a BUSY driver goes back to AVAILABLE so they can be matched again. */
+    private void releaseDriver(UserEntity driverUser) {
+        if (!orderRepository.findByDriverIdAndCurrentStageIn(driverUser, ACTIVE_STAGES).isEmpty()) {
+            return;
+        }
+
+        driverProfileRepository.findByUserId(driverUser).ifPresent(profile -> {
+            if (profile.getStatus() == Status.ONLINE_BUSY) {
+                profile.setStatus(Status.ONLINE_AVAILABLE);
+                driverProfileRepository.save(profile);
+            }
+        });
     }
 
     public OrderResponse createOrder(CreateOrderRequest request, String customerEmail) {
@@ -117,13 +146,21 @@ public class OrderService {
         UserEntity assignedDriverUser = driverProfile != null ? driverProfile.getUserId() : null;
         OrderEntity order = orderMapper.toEntity(request, userId, assignedDriverUser);
 
-        if (driverProfile != null) {
-            order.setCurrentStage(Stage.ASSIGNED);
-            driverProfile.setStatus(Status.ONLINE_BUSY);
-            driverProfileRepository.save(driverProfile);
+        if (driverProfile == null) {
+            return orderMapper.toResponse(orderRepository.save(order));
         }
 
-        OrderEntity updated_order = orderRepository.save(order);
+        // Persist CREATED first so the automatic CREATED -> ASSIGNED move lands in the audit trail too
+        // (actor left null: the system made this change, not a user).
+        OrderEntity savedOrder = orderRepository.save(order);
+        OrderStageHistoryEntity history = orderMapper.toEntity(Stage.ASSIGNED, savedOrder, null);
+
+        savedOrder.setCurrentStage(Stage.ASSIGNED);
+        driverProfile.setStatus(Status.ONLINE_BUSY);
+        driverProfileRepository.save(driverProfile);
+
+        OrderEntity updated_order = orderRepository.save(savedOrder);
+        orderStageHistoryRepository.save(history);
         return orderMapper.toResponse(updated_order);
     }
 }

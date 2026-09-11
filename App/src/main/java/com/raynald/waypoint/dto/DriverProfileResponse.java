@@ -10,6 +10,7 @@ import lombok.Data;
 public class DriverProfileResponse {
     private Long id;
     private Long userId;
+    private String name;
     private String status;
     private Double currentLat;
     private Double currentLng;

@@ -2,8 +2,11 @@ package com.raynald.waypoint.controller;
 
 import com.raynald.waypoint.dto.CreateOrderRequest;
 import com.raynald.waypoint.dto.ErrorResponse;
+import com.raynald.waypoint.dto.LocationBroadcastResponse;
+import com.raynald.waypoint.dto.OrderHistoryResponse;
 import com.raynald.waypoint.dto.OrderResponse;
 import com.raynald.waypoint.dto.UpdateOrderStatusRequest;
+import com.raynald.waypoint.service.OrderQueryService;
 import com.raynald.waypoint.service.OrderService;
 import com.raynald.waypoint.service.RateLimiterService;
 import com.raynald.waypoint.util.ClientIpUtil;
@@ -15,12 +18,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -29,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderQueryService orderQueryService;
     private final RateLimiterService rateLimiterService;
 
     @PostMapping
@@ -46,7 +53,7 @@ public class OrderController {
         }
 
         String ip = ClientIpUtil.resolve(servletRequest);
-        RateLimiterService.RateLimitResult ipLimit = rateLimiterService.checkIpLimit(ip);
+        RateLimiterService.RateLimitResult ipLimit = rateLimiterService.checkIpLimit("order", ip);
         if (!ipLimit.allowed()) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .header(HttpHeaders.RETRY_AFTER, String.valueOf(ipLimit.retryAfterSeconds()))
@@ -55,6 +62,29 @@ public class OrderController {
 
         OrderResponse response = orderService.createOrder(request, customerEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /** Customer: their own orders. Driver: orders assigned to them. Dispatcher: the 100 most recent orders. */
+    @GetMapping
+    public ResponseEntity<List<OrderResponse>> listOrders(Authentication authentication) {
+        return ResponseEntity.ok(orderQueryService.listOrders(authentication.getName()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(orderQueryService.getOrder(id, authentication.getName()));
+    }
+
+    /** Full stage timeline + recorded route. Owning customer or dispatcher. */
+    @GetMapping("/{id}/history")
+    public ResponseEntity<OrderHistoryResponse> getOrderHistory(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(orderQueryService.getHistory(id, authentication.getName()));
+    }
+
+    /** Latest driver position + ETA from Redis, so a freshly opened tracking view doesn't wait for the next ping. */
+    @GetMapping("/{id}/location")
+    public ResponseEntity<LocationBroadcastResponse> getLatestLocation(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(orderQueryService.getLatestLocation(id, authentication.getName()));
     }
 
     @PatchMapping("/{id}/status")

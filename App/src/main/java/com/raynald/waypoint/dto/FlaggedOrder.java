@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @AllArgsConstructor
-public class FlaggedOrder {
+public class FlaggedOrder implements Serializable {
     private Long orderId;
     private String reason;
     private String flaggedAt;

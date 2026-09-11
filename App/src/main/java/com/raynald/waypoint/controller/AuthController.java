@@ -17,6 +17,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -33,6 +35,10 @@ public class AuthController {
     @Value("${COOKIE_SECURE:false}")
     private boolean cookieSecure;
 
+    // "Lax" when the web client is served from the same site; "None" (plus COOKIE_SECURE=true) when it lives elsewhere.
+    @Value("${COOKIE_SAME_SITE:Lax}")
+    private String cookieSameSite;
+
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody CreateUserRequest request) {
         UserResponse response = authService.registerUser(request);
@@ -43,7 +49,7 @@ public class AuthController {
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginUserRequest request, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         String ip = ClientIpUtil.resolve(servletRequest);
 
-        RateLimiterService.RateLimitResult ipLimit = rateLimiterService.checkIpLimit(ip);
+        RateLimiterService.RateLimitResult ipLimit = rateLimiterService.checkIpLimit("login", ip);
         if (!ipLimit.allowed()) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .header(HttpHeaders.RETRY_AFTER, String.valueOf(ipLimit.retryAfterSeconds()))
@@ -52,15 +58,33 @@ public class AuthController {
 
         UserResponse response = authService.loginUser(request);
 
-        ResponseCookie cookie = ResponseCookie.from("token", jwtUtil.generateToken(response.getEmail(), response.getRole()))
+        String token = jwtUtil.generateToken(response.getEmail(), response.getRole());
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, tokenCookie(token, Duration.ofMillis(jwtUtil.getExpirationMs())).toString());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logoutUser(HttpServletResponse servletResponse) {
+        // The JWT is stateless and stays valid until it expires; logging out removes it from the browser.
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, tokenCookie("", Duration.ZERO).toString());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> currentUser(Authentication authentication) {
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Not signed in"));
+        }
+        return ResponseEntity.ok(authService.getCurrentUser(authentication.getName()));
+    }
+
+    private ResponseCookie tokenCookie(String value, Duration maxAge) {
+        return ResponseCookie.from("token", value)
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
-                .maxAge(Duration.ofMillis(jwtUtil.getExpirationMs()))
-                .sameSite("Lax")
+                .maxAge(maxAge)
+                .sameSite(cookieSameSite)
                 .build();
-
-        servletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return ResponseEntity.ok(response);
     }
 }

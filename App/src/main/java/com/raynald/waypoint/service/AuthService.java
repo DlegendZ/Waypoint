@@ -61,4 +61,10 @@ public class AuthService {
 
         return userMapper.toResponse(user);
     }
+
+    public UserResponse getCurrentUser(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("Your session is no longer valid. Sign in again."));
+        return userMapper.toResponse(user);
+    }
 }

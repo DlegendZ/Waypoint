@@ -7,6 +7,7 @@ import com.raynald.waypoint.enums.Stage;
 import com.raynald.waypoint.enums.Status;
 import com.raynald.waypoint.repository.DriverProfileRepository;
 import com.raynald.waypoint.repository.OrderRepository;
+import com.raynald.waypoint.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class DispatchService {
         Map<Stage, Long> mapOrderByStage = new HashMap<>();
 
         for (Object[] orderByStage : totalOrderByStage) {
-            mapOrderByStage.put(Stage.valueOf((String) orderByStage[0]), (Long) orderByStage[1]);
+            mapOrderByStage.put(toEnum(Stage.class, orderByStage[0]), (Long) orderByStage[1]);
         }
 
         List<Object[]> totalDriverByStatus = driverProfileRepository.countDriverProfileByStatus();
@@ -37,7 +38,7 @@ public class DispatchService {
         Map<Status, Long> mapDriverByStatus = new HashMap<>();
 
         for (Object[] driverByStatus : totalDriverByStatus) {
-            mapDriverByStatus.put(Status.valueOf((String) driverByStatus[0]), (Long) driverByStatus[1]);
+            mapDriverByStatus.put(toEnum(Status.class, driverByStatus[0]), (Long) driverByStatus[1]);
         }
 
         List<FlaggedOrder> flaggedOrders = orderRepository.findByFlaggedTrue().stream()
@@ -51,11 +52,16 @@ public class DispatchService {
                 .build();
     }
 
+    // JPQL "SELECT o.currentStage" hands back the enum itself (not its name), so a plain (String) cast fails.
+    private static <E extends Enum<E>> E toEnum(Class<E> type, Object value) {
+        return type.isInstance(value) ? type.cast(value) : Enum.valueOf(type, value.toString());
+    }
+
     private FlaggedOrder toFlaggedOrder(OrderEntity order) {
         return FlaggedOrder.builder()
                 .orderId(order.getId())
                 .reason(order.getFlagReason())
-                .flaggedAt(order.getFlaggedAt() != null ? order.getFlaggedAt().toString() : null)
+                .flaggedAt(TimeUtil.toIso(order.getFlaggedAt()))
                 .build();
     }
 }
