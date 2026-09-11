@@ -16,8 +16,26 @@ simulated drivers, so anyone can click the link and use the app with nothing dep
 it at a deployed API and the same build talks to the real backend (see
 [Connecting the web app to a deployed API](#connecting-the-web-app-to-a-deployed-api)).
 
+## Screenshots
+
+All captured from the demo build, with simulated drivers around central Jakarta.
+
+**Customer tracking a delivery:** the driver's position and ETA stream in live over STOMP, and the stage
+strip shows how far along the order is.
+
+![Customer tracking a delivery live on the map](docs/screenshots/customer-tracking.webp)
+
+| Placing an order | Driver console, mid-trip |
+|---|---|
+| ![Customer choosing pick-up and drop-off points on the map](docs/screenshots/customer-new-delivery.webp) | ![Driver console during a simulated drive to the drop-off](docs/screenshots/driver.webp) |
+| **Dispatcher board** | **Order history and recorded route** |
+| ![Dispatcher board with orders by stage, driver counts and the fleet map](docs/screenshots/dispatcher-board.webp) | ![Dispatcher viewing one order's stage timeline and route](docs/screenshots/dispatcher-order.webp) |
+| **Sign in (demo accounts)** | **On a phone** |
+| ![Sign-in screen over the live fleet map](docs/screenshots/sign-in.webp) | <img src="docs/screenshots/customer-phone.webp" alt="Customer tracking view on a phone" width="260"> |
+
 ## Table of Contents
 
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Web App](#web-app)
@@ -38,25 +56,25 @@ it at a deployed API and the same build talks to the real backend (see
 ## Architecture
 
 ```
-                 Web app (web/, static — GitHub Pages or `npm run dev`)
+            Web app (web/, static — GitHub Pages or `npm run dev`)
           Customer screen      Driver screen        Dispatcher screen
                 |                    |                      |
    HTTPS (REST, cookie auth)   WS/STOMP (publish)    HTTPS (REST, polling)
    WS/STOMP (subscribe)        HTTPS (REST)                 |
                 v                    v                      v
-+----------------------------------------------------------------+
-|              Spring Boot App (Waypoint API, App/)                |
-|  Controller layer  -> REST + STOMP message mappings              |
-|  Service layer     -> state machine, matching, ETA, authz        |
-|  Repository layer  -> Spring Data JPA                            |
-+----------------------------------------------------------------+
-        |                              |
-        v                              v
-  PostgreSQL                        Redis
-  (system of record:            (fast-changing state:
-   users, orders,                 latest driver location,
-   stage history,                 rate-limit counters,
-   location history)              dispatch-overview cache)
+      +----------------------------------------------------------------+
+      |              Spring Boot App (Waypoint API, App/)              |
+      |  Controller layer  -> REST + STOMP message mappings            |
+      |  Service layer     -> state machine, matching, ETA, authz      |
+      |  Repository layer  -> Spring Data JPA                          |
+      +----------------------------------------------------------------+
+              |                              |
+              v                              v
+        PostgreSQL                        Redis
+        (system of record:            (fast-changing state:
+        users, orders,                 latest driver location,
+        stage history,                 rate-limit counters,
+        location history)              dispatch-overview cache)
 ```
 
 - **REST** handles auth, order creation and lookup, order/driver status changes, history, and the
